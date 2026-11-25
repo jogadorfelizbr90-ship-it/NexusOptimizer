@@ -1,0 +1,38 @@
+
+name: Build NEXUS OPTIMIZER
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Baixar arquivos
+        uses: actions/checkout@v4
+
+      - name: Preparar .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Extrair projeto
+        shell: pwsh
+        run: |
+          Expand-Archive -LiteralPath "NexusOptimizer-Projeto.zip" -DestinationPath "source" -Force
+
+      - name: Compilar NEXUS
+        run: dotnet publish source/NexusOptimizer/src/NexusOptimizer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist
+
+      - name: Disponibilizar executável
+        uses: actions/upload-artifact@v4
+        with:
+          name: NEXUS-OPTIMIZER
+          path: dist/NexusOptimizer.exe
+          if-no-files-found: error
